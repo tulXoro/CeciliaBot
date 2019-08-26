@@ -9,7 +9,7 @@ const TOKEN = 'NjE0MjYxNjc2MzA0MjM2NTY0.XV9zxg.QoP3aJNbIm4MBygLoQ-AqXMfhrU';
 //prefix to start commands
 const PREFIX = '[]';
 
-//for custom discord servers
+//for my own discord server
 const ADMIN_ROLE = '614614883815653386';//admin role that manages the bot
 
 //other vars
@@ -20,7 +20,8 @@ var active_servers = 0;
 bot.on('ready', () => {   
     console.log('Powering on!');//notifies console that program is starting (REDUNDANT)
     
-    bot.user.setActivity('around with toys', { type: "PLAYING" }).catch(console.error);//sets the bpt's activity (ex: "Playing Minecraft")
+    //sets the bot's activity (ex: "Playing Minecraft")
+    bot.user.setActivity('around with toys', { type: "PLAYING" }).catch(console.error);
     
     //prints each server that the bot is a member of
     bot.guilds.forEach(guild => {
@@ -73,12 +74,14 @@ bot.on("guildMemberAdd", member => {
 //called whenever someone joins/leaves the voice channel
 //i didn't know how to implement it so i borrowed it from stack overflow
 bot.on('voiceStateUpdate', (oldMember, newMember) => {
+    //if a role isn't found, then return
     const voice_role = oldMember.guild.roles.find(role => role.name == "In Voice Channel");
     if(!voice_role) return;
 
     let newUserChannel = newMember.voiceChannel
     let oldUserChannel = oldMember.voiceChannel
-  
+    
+    //checks when a member leaves or enters a channel
     if(newUserChannel && !oldUserChannel) oldMember.addRole(voice_role);
     else if(!oldUserChannel && newUserChannel) oldMember.addRole(voice_role);
     else if(!newUserChannel) newMember.removeRole(voice_role);
@@ -92,6 +95,7 @@ bot.on('message', msg => {
     //if the "author" or user who sent the message is the bot, then this method stops
     if(msg.author == bot.user) return;
 
+    //just a simple command to praise the bot
     if(msg.content == "good bot"){
         praise++;
         return msg.channel.send('(.❛ ᴗ ❛.)');
