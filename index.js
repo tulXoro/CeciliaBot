@@ -60,7 +60,7 @@ bot.on('error', err => {
     process.exit(1);
 });
 
-//called whenever the a new member joins a server
+//called whenever a new member joins a server
 bot.on("guildMemberAdd", member => {
     //sets the channel to post a message in (only works if the channel name is "news"
     const channel = member.guild.channels.find(channel => channel.name == "news")
