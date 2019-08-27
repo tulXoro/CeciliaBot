@@ -4,7 +4,7 @@ const VER = '1.1.1';//version # of bot
 const bot = new Discord.Client();//bot is created as a discord client
 
 //used to login to discord or something
-const TOKEN = 'NjE0MjYxNjc2MzA0MjM2NTY0.XV9zxg.QoP3aJNbIm4MBygLoQ-AqXMfhrU';
+const TOKEN = 'NjE0MjYxNjc2MzA0MjM2NTY0.XWDKiw.WmPHCiiD6hhILrlvcS18Vev6KnQ';
 
 //prefix to start commands
 const PREFIX = '[]';
@@ -21,7 +21,10 @@ bot.on('ready', () => {
     console.log('Powering on!');//notifies console that program is starting (REDUNDANT)
     
     //sets the bot's activity (ex: "Playing Minecraft")
-    bot.user.setActivity('around with toys', { type: "PLAYING" }).catch(console.error);
+    bot.user.setActivity('with toys', { type: "PLAYING" }).catch(console.error);
+
+    //set the bot's status
+    bot.user.setStatus('online').catch(console.error);
     
     //prints each server that the bot is a member of
     bot.guilds.forEach(guild => {
@@ -31,7 +34,8 @@ bot.on('ready', () => {
         //prints each channel of every server
         guild.channels.forEach(channel => {
             console.log(`   -${channel.name} ${channel.type} ${channel.id}`);
-            if(channel.id == 598068252949610497) channel.send("I'm online again!");//temp thing to notify channel that the bot is on
+            //if(channel.id == 598068252949610497) 
+                //channel.send("I'm online again!");//temp thing to notify channel that the bot is on
         })
 
         //prints all the roles from each server
@@ -44,32 +48,28 @@ bot.on('ready', () => {
     console.log('Powered up and ready to go!');
 })
 
-//when bot is disconnected
-bot.on('disconnected', () => {
-    console.log('[META][WARN] Disconnected from Discord API Service. Attempting to reconnected...');
-});
-
-//warning from Discord.js
-bot.on('warn', err => {
-    console.log('[META][WARN] ' + msg);
-});
-
-//error from Discord.js
-bot.on('error', err => {
-    console.log('[META][ERROR] ' + err.msg);
-    process.exit(1);
-});
-
 //called whenever a new member joins a server
 bot.on("guildMemberAdd", member => {
-    //sets the channel to post a message in (only works if the channel name is "news"
+    //sets the channel to post a message in (only works if the channel name is "news")
     const channel = member.guild.channels.find(channel => channel.name == "news")
-    if(!channel) return; //if the channel doesn't exist, then stop the program
+    const ruleChannel = member.guild.channels.find(channel => channel.name == "rules")
+    if(!channel || !ruleChannel) return; //if the channel doesn't exist, then stop the program
 
     //sends a message to the channel to welcome the user
-    channel.send(`Welcome to Dystopian Utopia ${member}! Please check #rules!`);
+    channel.send(`Welcome to Dystopian Utopia ${member}! Please check ${ruleChannel}`);
+
+    //auto assigns a role to the new user
+    const newRole = member.guild.roles.find(role => role.name == "Member");
+    if(!newRole) return;
+    member.addRole(newRole);
 })
 
+bot.on("guildMemberRemove", member => {
+    const channel = member.guild.channels.find(channel => channel.name == "news")
+    if(!channel) return;
+
+    channel.send(`${member.user.username}#${member.user.discriminator} has left the server!`);
+})
 
 //called whenever someone joins/leaves the voice channel
 //i didn't know how to implement it so i borrowed it from stack overflow
@@ -140,10 +140,11 @@ bot.on('message', msg => {
                     const embed = new Discord.RichEmbed()
                                     .setTitle('My statistics!')
                                     .addField('Creator', 'tulxoro#3977', true)
-                                    .addField('Verson', VER, true)
+                                    .addField('Version', VER, true)
                                     .addField("Current Server", msg.guild.name, true)
                                     .addField('Active Servers', active_servers, true)
-                                    .addField('Praise', praise)
+                                    .addField('Praise', praise, true)
+                                    .addField('Uptime', getUpTime(), true)
                                     .setColor(0x00FBFF)
                                     .setThumbnail(bot.user.avatarURL)
                                     .setFooter('Sorry if I\'m buggy! I am still in development! Original image: https://bit.ly/30vWVvN');
@@ -152,6 +153,17 @@ bot.on('message', msg => {
         
     }
 })
+
+//claculates the total time that the bot has been up
+function getUpTime() {
+    let tot_uptime = bot.uptime/1000.0;
+    if(tot_uptime<60.0) return tot_uptime.toFixed(1) + " seconds";
+    tot_uptime = tot_uptime/60;
+    if(tot_uptime<60.0) return tot_uptime.toFixed(1) + " minutes";
+    tot_uptime = tot_uptime/60;
+    if(tot_uptime<24) return tot_uptime.toFixed(1) + " hours";
+    return tot_uptime.toFixed(1) + " days";
+}
 
 //the bot logs on and starts using the profile token
 bot.login(TOKEN);
