@@ -21,10 +21,10 @@ bot.on('ready', () => {
     console.log('Powering on!');//notifies console that program is starting (REDUNDANT)
     
     //sets the bot's activity (ex: "Playing Minecraft")
-    bot.user.setActivity('with toys', { type: "PLAYING" }).catch(console.error);
+    bot.user.setActivity('being edited', { type: "PLAYING" }).catch(console.error);
 
     //set the bot's status
-    bot.user.setStatus('online').catch(console.error);
+    bot.user.setStatus('dnd').catch(console.error);
     
     //prints each server that the bot is a member of
     bot.guilds.forEach(guild => {
@@ -105,13 +105,15 @@ bot.on('message', msg => {
     if(!msg.content.startsWith(PREFIX)) return;
 
     //if the bot detects a message which is in a dm or group, this method stops
-    if(msg.channel.type == 'dm' || msg.channel.type == 'group')
+    if(!msg.guild)
         return msg.channel.sendMessage('Oops! Sorry I can\'t respond to direct messages!');
 
     //creates an array called "args" that seperates each word by a space
     //ex: "{PREFIX}Hello there!" will make an array with 2 elements
     //where args[0] equals "Hello" and args[1] equals "there!" etc..
     let args = msg.content.substring(PREFIX.length).split(" ");
+    let member = msg.member;
+    let channel = msg.channel;
 
     //a switch statement which takes the first word and compares it. This
     //is the primary way to make bot commands
@@ -123,16 +125,29 @@ bot.on('message', msg => {
         //chat
         case 'apologize':
             return msg.reply('I\'m really sorry! Please accept my apology!');
-        
+
+        //music
+        case 'join':
+            if(member.voiceChannel){
+                member.voiceChannel.join().then(connection => {}).catch(console.log);
+                return channel.send('I\'m in the voice channel now!');
+            }return channel.send('You need to join a voice channel first!');
+
+        case 'leave':
+            if(msg.guild.voiceConnection) {
+                msg.guild.voiceConnection.disconnect();
+                return channel.send('I left the voice channel!');
+            }else return channel.send('I\'m not in a voice channel!');
+
         //admin
         case 'delete':
-            if(!msg.member.roles.has(ADMIN_ROLE))
-                return msg.channel.send('Sorry, you don\'t have the right permissions to do that!');
+            if(!member.roles.has(ADMIN_ROLE))
+                return channel.send('Sorry, you don\'t have the right permissions to do that!');
             if(!args[1]) 
-                return msg.channel.send('Sorry, please tell me the amount of messages you want me to delete!');
+                return channel.send('Sorry, please tell me the amount of messages you want me to delete!');
             if(isNaN(args[1]))
-                return msg.channel.send('Please take this seriously! You didn\'t give me a number!');
-            return msg.channel.bulkDelete(args[1]);
+                return channel.send('Please take this seriously! You didn\'t give me a number!');
+            return channel.bulkDelete(args[1]);
 
         //bot
         case 'bot':
@@ -148,7 +163,7 @@ bot.on('message', msg => {
                                     .setColor(0x00FBFF)
                                     .setThumbnail(bot.user.avatarURL)
                                     .setFooter('Sorry if I\'m buggy! I am still in development! Original image: https://bit.ly/30vWVvN');
-                    return msg.channel.send(embed);
+                    return channel.send(embed);
                 }
         
     }
