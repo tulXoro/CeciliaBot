@@ -1,13 +1,12 @@
 {
-  "name": "Cecilia",
-  "version": "1.1.1",
+  "name": "typscript-discordbot",
+  "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "node .": "node run index.js"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "Tim",
+  "author": "tulXoro",
   "license": "ISC",
   "dependencies": {
     "discord.js": "^11.5.1"
