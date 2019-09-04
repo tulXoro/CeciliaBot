@@ -123,6 +123,8 @@ bot.on('message', msg => {
             return msg.reply('Sorry, I would if I could! But my commands are a work in progress!');
 
         //chat
+        case 'introduce':
+			return channel.send("I'm a bot programmed by tulXoro (further known as Tim)! I'm currently running on his Raspberry Pi!");
         case 'apologize':
             return msg.reply('I\'m really sorry! Please accept my apology!');
 
@@ -180,7 +182,7 @@ function getUpTime() {
     if(tot_uptime<60.0) return tot_uptime.toFixed(1) + " minutes";
     tot_uptime = tot_uptime/60;//hours
     if(tot_uptime<24) return tot_uptime.toFixed(1) + " hours";
-    tot_uptime = tot_uptime/24;
+    tot_uptime = tot_uptime/24; //days
     return tot_uptime.toFixed(1) + " days";
 }
 
