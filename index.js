@@ -21,10 +21,10 @@ bot.on('ready', () => {
     console.log('Powering on!');//notifies console that program is starting (REDUNDANT)
     
     //sets the bot's activity (ex: "Playing Minecraft")
-    bot.user.setActivity('being edited', { type: "PLAYING" }).catch(console.error);
+    bot.user.setActivity('with toys', { type: "PLAYING" }).catch(console.error);
 
     //set the bot's status
-    bot.user.setStatus('dnd').catch(console.error);
+    bot.user.setStatus('online').catch(console.error);
     
     //prints each server that the bot is a member of
     bot.guilds.forEach(guild => {
@@ -128,10 +128,13 @@ bot.on('message', msg => {
 
         //music
         case 'join':
+            /*
             if(member.voiceChannel){
                 member.voiceChannel.join().then(connection => {}).catch(console.log);
                 return channel.send('I\'m in the voice channel now!');
             }return channel.send('You need to join a voice channel first!');
+            */
+           return channel.send('This feature is a WIP!');
 
         case 'leave':
             if(msg.guild.voiceConnection) {
@@ -171,12 +174,13 @@ bot.on('message', msg => {
 
 //claculates the total time that the bot has been up
 function getUpTime() {
-    let tot_uptime = bot.uptime/1000.0;
+    let tot_uptime = bot.uptime/1000.0;//gets seconds
     if(tot_uptime<60.0) return tot_uptime.toFixed(1) + " seconds";
-    tot_uptime = tot_uptime/60;
+    tot_uptime = tot_uptime/60;//minutes
     if(tot_uptime<60.0) return tot_uptime.toFixed(1) + " minutes";
-    tot_uptime = tot_uptime/60;
+    tot_uptime = tot_uptime/60;//hours
     if(tot_uptime<24) return tot_uptime.toFixed(1) + " hours";
+    tot_uptime = tot_uptime/24;
     return tot_uptime.toFixed(1) + " days";
 }
 
