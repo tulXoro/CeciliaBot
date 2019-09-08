@@ -1,2 +1,4 @@
 npm init
-npmnpm install discord.js --save
+npm install discord.js --save
+npm install --save ytdl-core opusscript
+npm install youtube-search
