@@ -199,11 +199,14 @@ bot.on('message', msg => {
             if(!servers[msg.guild.id])
                 return channel.send("No queue to show!");
             var server = servers[msg.guild.id];
-            let response = "";
             if(!server.queue || !server.queue[0]) return channel.send("No queue to show!");
-            for(let i=0; i<server.queue.length; i++)
-                response+= i + ") <"  + server.queue[i] + ">\n";
-            return channel.send(response);
+            var embedQ = new Discord.RichEmbed().setTitle("Queue").setColor(0x00FBFF);
+            for(var i=0; i<server.queue.length; i++){
+                var temp = i+1;
+                if(i==0) embedQ.addField("Now playing", server.queue[0]);
+                else embedQ.addField(temp, server.queue[0]);
+            }
+            return channel.send(embedQ);
 
         case 'skip': 
             var server = servers[msg.guild.id];
