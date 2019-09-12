@@ -136,10 +136,15 @@ bot.on('message', msg => {
                                 .setTitle('Commands')
                                 .addField('[]introduce', 'Introduce me!')
                                 .addField('[]y/n', "Ask me a yes or no question!")
-                                .addField("[]join", "This command is currently disabled! I will be able to join in the future though!")
+								.addBlankField(false)
+                                .addField("[]play", "Let's play a song!")
+								.addField("[]queue", "Look at the queue!")
+								.addField("[]skip", "Skip the current song!")
                                 .addField('[]leave', "I'll leave the voice channel!")
+								.addBlankField(false)
                                 .addField('[]dm', "Send a direct message to someone!")
                                 .addField('[]purge', "Delete messages!")
+								.addBlankField(false)
                                 .addField('[]bot stats', "Everything you need to know about me!")
                                 .setColor(0x00FBFF)
                                 .setThumbnail(bot.user.avatarURL)
@@ -160,66 +165,44 @@ bot.on('message', msg => {
             let mention = msg.mentions.users.first();
             if(!mention) return channel.send("Please mention the person you want me to DM");
             let mentionMsg = msg.content.slice(5);
-            mention.send(`${msg.author.username}#${msg.author.discriminator} said "${mentionMsg}"`);
+            mention.send(`${msg.author.username}#${msg.author.discriminator} said "${mentionMsg}"!`);
             return msg.delete();
 
         //music
-        case 'leave':
-            if(msg.guild.voiceConnection) {
-                msg.guild.voiceConnection.disconnect();
-                return channel.send('I left the voice channel!');
-            }else return channel.send('I\'m not in a voice channel!');
-
         case 'play':
             if(!member.voiceChannel) return channel.send("Please be in a voice channel!");
-
             if(!args[1]) return channel.send("Please provide a YouTube link!");
-
             if(!args[1].includes("https://youtu.be") && !args[1].includes("https://youtube"))
                 return channel.send("Sorry! Please insert a valid YouTube link!");
-
-            if(!servers[msg.guild.id]){//when server does not exist in list
-                servers[msg.guild.id] = { queue: [] };//add server to the list with a queue
-            }
-
-            if(bot.voiceConnections.has(member.voiceConnection)) return;
-
+            if(!servers[msg.guild.id]) servers[msg.guild.id] = { queue: [] };
             if(!servers[msg.guild.id].queue[0]){
                 member.voiceChannel.join().then(connection => {//bot joins voice channel
                     servers[msg.guild.id].queue.push(args[1]);
                     play(connection, msg); //calls play function
                 }).catch(console.log);
                 return channel.send("I'm playing music! I'm a little more confident about myself now but I still might not work correctly!");;
-            }
-
-            servers[msg.guild.id].queue.push(args[1]);
+            }servers[msg.guild.id].queue.push(args[1]);
             return channel.send("Added to queue!");
-            
+        case 'leave':
+        	if(msg.guild.voiceConnection) {
+                msg.guild.voiceConnection.disconnect();
+                return channel.send('I left the voice channel!');
+            }else return channel.send('I\'m not in a voice channel!');
         case 'queue':
-            if(!servers[msg.guild.id])
-                return channel.send("No queue to show!");
             var server = servers[msg.guild.id];
-            if(!server.queue || !server.queue[0]) return channel.send("No queue to show!");
+            if(!server || !server.queue[0]) return channel.send("No queue to show!");
             var embedQ = new Discord.RichEmbed().setTitle("Queue").setColor(0x00FBFF);
             for(var i=0; i<server.queue.length; i++){
-                var temp = i+1;
                 if(i==0) embedQ.addField("Now playing", server.queue[0]);
-                else embedQ.addField(temp, server.queue[0]);
-            }
-            return channel.send(embedQ);
-
+                else embedQ.addField(i, server.queue[i]);
+	    	}return channel.send(embedQ);
         case 'skip': 
-            var server = servers[msg.guild.id];
-            if(server.dispatcher){ 
-                server.dispatcher.end();
-                return channel.send("Skipped the song!");
-            }
-            return channel.send("Could not skip the song!");
-
-        case 'stop':
-            var server = servers[msg.guild.id];
-            if(msg.guild.voiceConnection) msg.guild.voiceConnection.disconnect();
-            return;
+			var server = servers[msg.guild.id];
+			if(!server || !server.queue[0]) return channel.send("There is no song to skip!");
+			if(server.dispatcher){ 
+				server.dispatcher.end();
+				return channel.send("Skipped the song!");
+			}return channel.send("Could not skip the song!");
 
         //admin
         case 'purge':
@@ -235,20 +218,20 @@ bot.on('message', msg => {
             
         //bot
         case 'bot':
-                if(args[1]=='stats'){
-                    const embed = new Discord.RichEmbed()
-                                    .setTitle('My statistics!')
-                                    .addField('Creator', 'tulxoro#3977', true)
-                                    .addField('Version', VER, true)
-                                    .addField("Current Server", msg.guild.name, true)
-                                    .addField('Active Servers', active_servers, true)
-                                    .addField('Praise', praise, true)
-                                    .addField('Uptime', getUpTime(), true)
-                                    .setColor(0x00FBFF)
-                                    .setThumbnail(bot.user.avatarURL)
-                                    .setFooter('Sorry if I\'m buggy! I am still in development! Original image: https://bit.ly/30vWVvN');
-                    return channel.send(embed);
-                }
+			if(args[1]=='stats'){
+				const embed = new Discord.RichEmbed()
+								.setTitle('My statistics!')
+								.addField('Creator', 'tulxoro#3977', true)
+								.addField('Version', VER, true)
+								.addField("Current Server", msg.guild.name, true)
+								.addField('Active Servers', active_servers, true)
+								.addField('Praise', praise, true)
+								.addField('Uptime', getUpTime(), true)
+								.setColor(0x00FBFF)
+								.setThumbnail(bot.user.avatarURL)
+								.setFooter('Sorry if I\'m buggy! I am still in development! Original image: https://bit.ly/30vWVvN');
+				return channel.send(embed);
+			}
     }
 })
 
