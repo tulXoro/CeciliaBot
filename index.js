@@ -3,7 +3,7 @@ const YTDL = require('ytdl-core');
 
 //const fs = require('fs');
 const NAME = 'Cecilia';//Name of bot
-const VER = '1.3.0';//version # of bot
+const VER = '1.4.0';//version # of bot
 const bot = new Discord.Client();//bot is created as a discord client
 
 //used to login to discord or something
@@ -15,7 +15,7 @@ const PREFIX = '[]';
 //for my own discord server
 const ADMIN_ROLE = '614614883815653386';//admin role that manages the bot
 
-global.servers = {};
+var servers = {};
 
 //other vars
 var praise = 0;
@@ -169,33 +169,53 @@ bot.on('message', msg => {
                 msg.guild.voiceConnection.disconnect();
                 return channel.send('I left the voice channel!');
             }else return channel.send('I\'m not in a voice channel!');
+
         case 'play':
-            if(member.voiceChannel){
- 
-                if(!servers[msg.guild.id]){//when server does not exist in list
-                    servers[msg.guild.id] = { queue: [] };//add server to the list
-                }
+            if(!member.voiceChannel) return channel.send("Please be in a voice channel!");
+
+            if(!args[1]) return channel.send("Please provide a YouTube link!");
+
+            if(!args[1].includes("https://youtu.be") && !args[1].includes("https://youtube"))
+                return channel.send("Sorry! Please insert a valid YouTube link!");
+
+            if(!servers[msg.guild.id]){//when server does not exist in list
+                servers[msg.guild.id] = { queue: [] };//add server to the list with a queue
+            }
+
+            if(bot.voiceConnections.has(member.voiceConnection)) return;
+
+            if(!servers[msg.guild.id].queue[0]){
                 member.voiceChannel.join().then(connection => {//bot joins voice channel
                     servers[msg.guild.id].queue.push(args[1]);
                     play(connection, msg); //calls play function
                 }).catch(console.log);
-                return channel.send("I'm playing music! I'm very buggy though! Please only add one song to the queue after I'm done playing!");;
-            }else return channel.send('You need to join a voice channel first!');
-        case 'leave':
-            if(msg.guild.voiceConnection) {
-                msg.guild.voiceConnection.disconnect();
-                return channel.send('I left the voice channel!');
-            }else return channel.send('I\'m not in a voice channel!');
-            /*
+                return channel.send("I'm playing music! I'm a little more confident about myself now but I still might not work correctly!");;
+            }
+
+            servers[msg.guild.id].queue.push(args[1]);
+            return channel.send("Added to queue!");
+            
         case 'queue':
+            if(!servers[msg.guild.id])
+                return channel.send("No queue to show!");
             var server = servers[msg.guild.id];
             let response = "";
+            if(!server.queue || !server.queue[0]) return channel.send("No queue to show!");
             for(let i=0; i<server.queue.length; i++)
-                response+="\n" + i;
-            channel.send(response);*/
-        case 'add': 
-            let server = servers[msg.guild.id];
-            server.queue.push(args[1]);
+                response+= i + ") <"  + server.queue[i] + ">\n";
+            return channel.send(response);
+
+        case 'skip': 
+            var server = servers[msg.guild.id];
+            if(server.dispatcher){ 
+                server.dispatcher.end();
+                return channel.send("Skipped the song!");
+            }
+            return channel.send("Could not skip the song!");
+
+        case 'stop':
+            var server = servers[msg.guild.id];
+            if(msg.guild.voiceConnection) msg.guild.voiceConnection.disconnect();
             return;
 
         //admin
@@ -242,9 +262,10 @@ function getUpTime() {
 }
 
 function play(connection, msg){
-    servers[msg.guild.id].dipatcher = connection.playStream(YTDL(servers[msg.guild.id].queue[0], {filter: "audioonly"}));//for some reason, when playing multiple, it stops
-    servers[msg.guild.id].queue.shift();
-    servers[msg.guild.id].dipatcher.on("end", () => {
+    var server = servers[msg.guild.id];
+    server.dispatcher = connection.playStream(YTDL(servers[msg.guild.id].queue[0], {filter: "audioonly"}));//for some reason, when playing multiple, it stops
+    server.dispatcher.on("end", () => {
+        server.queue.shift();
         if(servers[msg.guild.id].queue[0]) play(connection, msg);
         else connection.disconnect();
     })
