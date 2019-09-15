@@ -7,7 +7,7 @@ const VER = '1.4.0';//version # of bot
 const bot = new Discord.Client();//bot is created as a discord client
 
 //used to login to discord or something
-const TOKEN = 'NjE0MjYxNjc2MzA0MjM2NTY0.XWDKiw.WmPHCiiD6hhILrlvcS18Vev6KnQ';
+const TOKEN = 'NjE0MjYxNjc2MzA0MjM2NTY0.XWDKiw';
 
 //prefix to start commands
 const PREFIX = '[]';
@@ -26,7 +26,7 @@ bot.on('ready', () => {
     console.log('Powering on!');//notifies console that program is starting (REDUNDANT)
     
     //sets the bot's activity (ex: "Playing Minecraft")
-    bot.user.setActivity('with toys', { type: "PLAYING" }).catch(console.error);
+    bot.user.setActivity('some music', { type: "PLAYING" }).catch(console.error);
 
     //set the bot's status
     bot.user.setStatus('online').catch(console.error);
@@ -61,7 +61,7 @@ bot.on("guildMemberAdd", member => {
     if(!channel || !ruleChannel) return; //if the channel doesn't exist, then stop the program
 
     //sends a message to the channel to welcome the user
-    channel.send(`Welcome to Dystopian Utopia ${member}! Please check ${ruleChannel}`);
+    channel.send(`Welcome to Dystopian Utopia ${member}! Please check ${ruleChannel}! I hope you enjoy your stay!`);
 
     //auto assigns a role to the new user
     const newRole = member.guild.roles.find(role => role.name == "Member");
@@ -124,6 +124,8 @@ bot.on('message', msg => {
     //ex: "{PREFIX}Hello there!" will make an array with 2 elements
     //where args[0] equals "Hello" and args[1] equals "there!" etc..
     let args = msg.content.substring(PREFIX.length).split(" ");
+
+    //common variables which help reduce lines of code
     let member = msg.member;
     let channel = msg.channel;
 
@@ -134,17 +136,17 @@ bot.on('message', msg => {
         case 'help':
                 const embed = new Discord.RichEmbed()
                                 .setTitle('Commands')
-                                .addField('[]introduce', 'Introduce me!')
+                                .addField('[]introduce', 'Let me give you an introduction!')
                                 .addField('[]y/n', "Ask me a yes or no question!")
-								.addBlankField(false)
-                                .addField("[]play", "Let's play a song!")
-								.addField("[]queue", "Look at the queue!")
-								.addField("[]skip", "Skip the current song!")
+                                .addBlankField(false)
+                                .addField("[]play", "Let's play some songs!")
+                                .addField("[]queue", "Take a look at the songs currently playing!")
+                                .addField("[]skip", "Skip the current song!")
                                 .addField('[]leave', "I'll leave the voice channel!")
-								.addBlankField(false)
+                                .addBlankField(false)
                                 .addField('[]dm', "Send a direct message to someone!")
                                 .addField('[]purge', "Delete messages!")
-								.addBlankField(false)
+                                .addBlankField(false)
                                 .addField('[]bot stats', "Everything you need to know about me!")
                                 .setColor(0x00FBFF)
                                 .setThumbnail(bot.user.avatarURL)
@@ -165,44 +167,85 @@ bot.on('message', msg => {
             let mention = msg.mentions.users.first();
             if(!mention) return channel.send("Please mention the person you want me to DM");
             let mentionMsg = msg.content.slice(5);
-            mention.send(`${msg.author.username}#${msg.author.discriminator} said "${mentionMsg}"!`);
+            mention.send(`${msg.author.username}#${msg.author.discriminator} said "${mentionMsg}"`);
             return msg.delete();
 
         //music
+        case 'leave':
+            if(msg.guild.voiceConnection) {
+                msg.guild.voiceConnection.disconnect();
+                return channel.send('I left the voice channel!');
+            }else return channel.send('I\'m not in a voice channel!');
+
         case 'play':
             if(!member.voiceChannel) return channel.send("Please be in a voice channel!");
+
             if(!args[1]) return channel.send("Please provide a YouTube link!");
+
             if(!args[1].includes("https://youtu.be") && !args[1].includes("https://youtube"))
                 return channel.send("Sorry! Please insert a valid YouTube link!");
-            if(!servers[msg.guild.id]) servers[msg.guild.id] = { queue: [] };
+            
+            if(!servers[msg.guild.id]){//when server does not exist in list
+                servers[msg.guild.id] = { 
+                    queue: [],
+                    loopQ: false,
+                    loopSong: false
+                };//add server to the list with a queue
+            }
+
+            if(bot.voiceConnections.has(member.voiceConnection)) return;
+
             if(!servers[msg.guild.id].queue[0]){
                 member.voiceChannel.join().then(connection => {//bot joins voice channel
                     servers[msg.guild.id].queue.push(args[1]);
                     play(connection, msg); //calls play function
                 }).catch(console.log);
                 return channel.send("I'm playing music! I'm a little more confident about myself now but I still might not work correctly!");;
-            }servers[msg.guild.id].queue.push(args[1]);
-            return channel.send("Added to queue!");
-        case 'leave':
-        	if(msg.guild.voiceConnection) {
-                msg.guild.voiceConnection.disconnect();
-                return channel.send('I left the voice channel!');
-            }else return channel.send('I\'m not in a voice channel!');
+            }
+
+            servers[msg.guild.id].queue.push(args[1]);
+            return channel.send(`Added to the queue!`);
+            
         case 'queue':
+            if(!servers[msg.guild.id]) return channel.send("No queue to show!");
             var server = servers[msg.guild.id];
-            if(!server || !server.queue[0]) return channel.send("No queue to show!");
+            if(!server.queue || !server.queue[0]) return channel.send("No queue to show!");
             var embedQ = new Discord.RichEmbed().setTitle("Queue").setColor(0x00FBFF);
             for(var i=0; i<server.queue.length; i++){
                 if(i==0) embedQ.addField("Now playing", server.queue[0]);
+                /*YTDL.getInfo(args[0], (err, info) =>{});*/
                 else embedQ.addField(i, server.queue[i]);
-	    	}return channel.send(embedQ);
+                /*YTDL.getInfo(args[i], (err, info) => {});*/
+            }return channel.send(embedQ);
         case 'skip': 
-			var server = servers[msg.guild.id];
-			if(!server || !server.queue[0]) return channel.send("There is no song to skip!");
-			if(server.dispatcher){ 
-				server.dispatcher.end();
-				return channel.send("Skipped the song!");
-			}return channel.send("Could not skip the song!");
+            var server = servers[msg.guild.id];
+            if(server.dispatcher){ 
+                server.dispatcher.end();
+                return channel.send("Skipped the song!");
+            }return channel.send("Could not skip the song!");
+        case 'stop':
+            var server = servers[msg.guild.id];
+            if(msg.guild.voiceConnection) msg.guild.voiceConnection.disconnect();
+            return;
+        case 'loop':
+            if(!servers[msg.guild.id]) return channel.send("Nothing to loop!");
+            var server = servers[msg.guild.id];
+            if(!server.queue || !server.queue[0]) return channel.send("There isn't anything to loop!");
+            
+            if(args[1]==="song") {
+                if(server.loopSong==false) {
+                    server.loopSong = true;
+                    return channel.send("Ok! I'll loop the current song!");
+                }
+                server.loopSong=false;
+                return channel.search("Ok! I won't loop the song!");
+            }    
+            
+            if(server.loopQ==false) {
+                server.loopQ=true;
+                return channel.send("Ok! I'll loop the queue!");
+            }server.loopQ=false;
+            return channel.send("Ok! I won't loop the queue!")
 
         //admin
         case 'purge':
@@ -218,20 +261,20 @@ bot.on('message', msg => {
             
         //bot
         case 'bot':
-			if(args[1]=='stats'){
-				const embed = new Discord.RichEmbed()
-								.setTitle('My statistics!')
-								.addField('Creator', 'tulxoro#3977', true)
-								.addField('Version', VER, true)
-								.addField("Current Server", msg.guild.name, true)
-								.addField('Active Servers', active_servers, true)
-								.addField('Praise', praise, true)
-								.addField('Uptime', getUpTime(), true)
-								.setColor(0x00FBFF)
-								.setThumbnail(bot.user.avatarURL)
-								.setFooter('Sorry if I\'m buggy! I am still in development! Original image: https://bit.ly/30vWVvN');
-				return channel.send(embed);
-			}
+                if(args[1]=='stats'){
+                    const embed = new Discord.RichEmbed()
+                                    .setTitle('My statistics!')
+                                    .addField('Creator', 'tulxoro#3977', true)
+                                    .addField('Version', VER, true)
+                                    .addField("Current Server", msg.guild.name, true)
+                                    .addField('Active Servers', active_servers, true)
+                                    .addField('Praise', praise, true)
+                                    .addField('Uptime', getUpTime(), true)
+                                    .setColor(0x00FBFF)
+                                    .setThumbnail(bot.user.avatarURL)
+                                    .setFooter('Sorry if I\'m buggy! I am still in development! Original image: https://bit.ly/30vWVvN');
+                    return channel.send(embed);
+                }
     }
 })
 
@@ -249,9 +292,13 @@ function getUpTime() {
 
 function play(connection, msg){
     var server = servers[msg.guild.id];
-    server.dispatcher = connection.playStream(YTDL(servers[msg.guild.id].queue[0], {filter: "audioonly"}));//for some reason, when playing multiple, it stops
+    server.dispatcher = connection.playStream(YTDL(servers[msg.guild.id].queue[0], {filter: "audioonly", quality: "highestaudio"}));//for some reason, when playing multiple, it stops
     server.dispatcher.on("end", () => {
-        server.queue.shift();
+        if(server.loopSong==false) server.queue.shift();
+        if(server.loopQ==true){
+            server.queue.push(server.queue[0]);
+            server.queue.shift();
+        }
         if(servers[msg.guild.id].queue[0]) play(connection, msg);
         else connection.disconnect();
     })
