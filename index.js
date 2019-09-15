@@ -7,7 +7,7 @@ const VER = '1.4.0';//version # of bot
 const bot = new Discord.Client();//bot is created as a discord client
 
 //used to login to discord or something
-const TOKEN = 'NjE0MjYxNjc2MzA0MjM2NTY0.XWDKiw';
+const TOKEN = 'NjE0MjYxNjc2MzA0MjM2NTY0.';
 
 //prefix to start commands
 const PREFIX = '[]';
@@ -227,6 +227,7 @@ bot.on('message', msg => {
             var server = servers[msg.guild.id];
             if(msg.guild.voiceConnection) msg.guild.voiceConnection.disconnect();
             return;
+            /*
         case 'loop':
             if(!servers[msg.guild.id]) return channel.send("Nothing to loop!");
             var server = servers[msg.guild.id];
@@ -245,7 +246,7 @@ bot.on('message', msg => {
                 server.loopQ=true;
                 return channel.send("Ok! I'll loop the queue!");
             }server.loopQ=false;
-            return channel.send("Ok! I won't loop the queue!")
+            return channel.send("Ok! I won't loop the queue!")*/
 
         //admin
         case 'purge':
@@ -293,12 +294,13 @@ function getUpTime() {
 function play(connection, msg){
     var server = servers[msg.guild.id];
     server.dispatcher = connection.playStream(YTDL(servers[msg.guild.id].queue[0], {filter: "audioonly", quality: "highestaudio"}));//for some reason, when playing multiple, it stops
-    server.dispatcher.on("end", () => {
+    server.dispatcher.on("end", () => {/*
         if(server.loopSong==false) server.queue.shift();
         if(server.loopQ==true){
             server.queue.push(server.queue[0]);
             server.queue.shift();
-        }
+        }*/
+        server.queue.shift();
         if(servers[msg.guild.id].queue[0]) play(connection, msg);
         else connection.disconnect();
     })
