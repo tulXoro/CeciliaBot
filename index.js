@@ -171,16 +171,36 @@ bot.on('message', msg => {
             return msg.delete();
 
         //music
+        case 'MCqueue':
+            if(!servers[msg.guild.id]){//when server does not exist in list
+                servers[msg.guild.id] = { 
+                    queue: [],
+                    repeat: false,
+                    loop: false,
+                };//add server to the list with a queue
+            }
+
+            if(bot.voiceConnections.has(member.voiceConnection)) return;
+
+            if(!servers[msg.guild.id].queue[0]){
+                member.voiceChannel.join().then(connection => {//bot joins voice channel
+                    for(var i = 0; i<6; i++) servers[msg.guild.id].queue.push(mcRide());
+                    play(connection, msg); //calls play function
+                }).catch(console.log);
+                return channel.send("Playing random minecraft tracks!");;
+            }
+
+            for(var i = 0; i<6; i++) servers[msg.guild.id].queue.push(mcRide());
+            return channel.send(`Added random minecraft tracks to the queue!`);
         case 'leave':
             if(msg.guild.voiceConnection) {
                 msg.guild.voiceConnection.disconnect();
                 return channel.send('I left the voice channel!');
             }else return channel.send('I\'m not in a voice channel!');
-
         case 'play':
             if(!member.voiceChannel) return channel.send("Please be in a voice channel!");
 
-            if(!args[1]) return channel.send("Please provide a YouTube link!");
+            if(!args[1]) return channel.send("Please tell me what to play!");
 
             if(!args[1].includes("https://youtu.be") && !args[1].includes("https://youtube"))
                 return channel.send("Sorry! Please insert a valid YouTube link!");
@@ -205,7 +225,6 @@ bot.on('message', msg => {
 
             servers[msg.guild.id].queue.push(args[1]);
             return channel.send(`Added to the queue!`);
-            
         case 'queue':
             if(!servers[msg.guild.id]) return channel.send("No queue to show!");
             var server = servers[msg.guild.id];
@@ -304,6 +323,23 @@ function play(connection, msg){
         if(servers[msg.guild.id].queue[0]) play(connection, msg);
         else connection.disconnect();
     })
+}
+
+function mcRide(){
+    switch(Math.floor(Math.random() * 6)){
+        case 0:
+            return "https://youtu.be/aBkTkxKDduc";
+        case 1: 
+            return "https://youtu.be/DZ47H84Bc_Q";
+        case 2:
+            return "https://youtu.be/4i0d6CPLSGo";
+        case 3:
+            return "https://youtu.be/SznnVAnkv3c";
+        case 4:
+            return "https://youtu.be/Gpd85y_iTxY";
+        case 5:
+            return "https://youtu.be/ONbX9QCL36k";
+    }
 }
 
 //function log(str){ fs.appendFile('log.txt', str, err => console.log(err)); }
